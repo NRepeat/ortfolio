@@ -3,17 +3,19 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
-type State = {
+export type State = {
   connection: HubConnection | null;
   loading: boolean;
   chatRoom: string | null;
   messages: string[];
 };
 
-type Actions = {
+export type Actions = {
   setConnection: (connection: HubConnection) => void;
   setLoading: (loading: boolean) => void;
   setChatRoom: (chatRoom: string) => void;
+  setChatMessages: (messages: string[]) => void;
+  setChatMessage: (messages: string) => void;
   clearChatState: () => void;
 };
 
@@ -37,6 +39,14 @@ export const useChatStore = create<State & Actions>()(
       setChatRoom: (chatRoom: string) =>
         set((state) => {
           state.chatRoom = chatRoom;
+        }),
+      setChatMessages: (messages) =>
+        set((state) => {
+          state.messages = messages;
+        }),
+      setChatMessage: (message) =>
+        set((state) => {
+          state.messages = [...state.messages, message];
         }),
       clearChatState: () =>
         set((state) => {

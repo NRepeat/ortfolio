@@ -7,11 +7,11 @@ import { FC } from "react";
 import { useChatStore } from "@/store/slice/chat";
 
 type ChatProps = {
-  chatRoom: string;
   messages: string[];
+  chatRoom?: string;
 };
 
-const Chat: FC<ChatProps> = ({ chatRoom, messgaes }) => {
+const Chat: FC<ChatProps> = ({ messages }) => {
   const chatState = useChatStore((state) => state);
   const logout = () => chatState.clearChatState();
   return (
@@ -30,12 +30,14 @@ const Chat: FC<ChatProps> = ({ chatRoom, messgaes }) => {
             <h3 className="text-md text-muted-foreground">nn@gmail.com</h3>
           </div>
         </div>
-        <CirclePlus className="" />
+        <CirclePlus />
       </CardHeader>
 
-      <CardContent>
-        <Message message="test" user="user" />
-        <Message message={chatRoom} user="user" />
+      <CardContent className="h-[400px]">
+        {messages &&
+          messages.map((message) => (
+            <Message key={message} message={message} user="user" />
+          ))}
       </CardContent>
       <CardFooter>
         <InputForm />

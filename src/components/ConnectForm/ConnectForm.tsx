@@ -19,8 +19,8 @@ import sleep from "@/lib/sleep";
 import ChatHab from "@/api/caht";
 
 const ConnectForm = () => {
-  const chat = new ChatHab();
   const chatState = useChatStore((state) => state);
+  const chat = new ChatHab(chatState);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -29,16 +29,11 @@ const ConnectForm = () => {
     },
   });
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    chatState.setLoading(true);
     const connection = await chat.invokeConnectToChat(values);
     if (connection.connection) {
       chatState.setConnection(connection.connection);
       await sleep();
-      chatState.setLoading(false);
       chatState.setChatRoom(connection.chatRoom);
-    } else if (connection.error) {
-      await sleep();
-      chatState.setLoading(false);
     }
   };
   return (

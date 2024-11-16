@@ -13,16 +13,23 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import formSchema from "@/service/input-chat-form";
+import ChatHab from "@/api/caht";
 
 const InputForm = () => {
   const chatState = useChatStore((state) => state);
+  const chat = new ChatHab(chatState);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       message: "",
     },
   });
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {};
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    await chat.sendMessageToChat({
+      message: values.message,
+    });
+    form.reset();
+  };
   return (
     <Form {...form}>
       <form
