@@ -1,35 +1,24 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { HubConnectionBuilder } from "@microsoft/signalr";
+import "./App.css";
+import ConnectForm from "./components/ConnectForm/ConnectForm";
+import { ThemeProvider } from "./components/providers/ThemeProvieder";
+import { Card, CardContent, CardHeader } from "./components/ui/card";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <section className="flex w-full h-screen justify-center items-center">
+        <Card className="min-w-[300px]">
+          <CardHeader>
+            <h1 className="font-[600] text-2xl">Connect to chat</h1>
+          </CardHeader>
+          <CardContent>
+            <ConnectForm />
+          </CardContent>
+        </Card>
+      </section>
+    </ThemeProvider>
+  );
 }
 
-export default App
+export default App;
