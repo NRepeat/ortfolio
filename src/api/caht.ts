@@ -1,22 +1,36 @@
-import { HubConnectionBuilder } from "@microsoft/signalr";
+import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
+import { error } from "console";
 
 type UserConnectionType = {
   user: string;
   chatRoom: string;
 };
-const joinChat = async ({ chatRoom, user }: UserConnectionType) => {
-  const hubConnection = new HubConnectionBuilder()
-    .withUrl("http://localhost:5153/chat")
-    .withAutomaticReconnect()
-    .build();
-  try {
-    await hubConnection.start();
-    await hubConnection.invoke("JoinChat", { chatRoom, user });
-  } catch (error) {
-    console.log("🚀 ~ joinChat ~ error:", error);
-    throw new Response("Bad request", { status: 500 });
-  }
-};
 
-const chatApi = { joinChat };
-export default chatApi;
+class ChatHab {
+  private hubConnection: HubConnection;
+  constructor() {
+    this.hubConnection = new HubConnectionBuilder()
+      .withUrl("http://localhost:5153/chat")
+      .withAutomaticReconnect()
+      .build();
+    this.hubConnection.on("ReceiveMessage", (user, message) => {
+      console.log("🚀 ~ joinChat ~ user,message:", user, message);
+    });
+  }
+  public async invokeConnectToChat({ chatRoom, user }: UserConnectionType) {
+    try {
+      await this.hubConnection.start();
+      await this.hubConnection.invoke("JoinChat", { chatRoom, user });
+      return {
+        connection: this.hubConnection,
+        lading: false,
+        error: false,
+        chatRoom,
+      };
+    } catch (error) {
+      console.log("🚀 ~ joinChat ~ error:", error);
+      return { error: true, loading: false, message: error };
+    }
+  }
+}
+export default ChatHab;

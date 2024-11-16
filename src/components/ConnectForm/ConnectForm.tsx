@@ -13,9 +13,14 @@ import {
 } from "../ui/form";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import chatApi from "@/api/caht";
+import { useChatStore } from "@/store/slice/chat";
+import { Loader2 } from "lucide-react";
+import sleep from "@/lib/sleep";
+import ChatHab from "@/api/caht";
 
 const ConnectForm = () => {
+  const chat = new ChatHab();
+  const chatState = useChatStore((state) => state);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -24,7 +29,17 @@ const ConnectForm = () => {
     },
   });
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    await chatApi.joinChat(values);
+    chatState.setLoading(true);
+    const connection = await chat.invokeConnectToChat(values);
+    if (connection.connection) {
+      chatState.setConnection(connection.connection);
+      await sleep();
+      chatState.setLoading(false);
+      chatState.setChatRoom(connection.chatRoom);
+    } else if (connection.error) {
+      await sleep();
+      chatState.setLoading(false);
+    }
   };
   return (
     <Form {...form}>
@@ -63,7 +78,17 @@ const ConnectForm = () => {
             );
           }}
         />
-        <Button type="submit">Connect</Button>
+        <Button type="submit" disabled={chatState.loading}>
+          <div className="w-[70px] flex justify-center items-center">
+            {chatState.loading ? (
+              <>
+                <Loader2 className="animate-spin" />
+              </>
+            ) : (
+              <>Connect</>
+            )}
+          </div>
+        </Button>
       </form>
     </Form>
   );
