@@ -6,22 +6,33 @@ import { ThemeProvider } from "./components/providers/ThemeProvieder";
 import { useChatStore } from "./store/slice/chat";
 import { useEffect } from "react";
 import ChatHab from "./api/caht";
+import sleep from "./lib/sleep";
 
 function App() {
   const { connection, loading, chatRoom, messages, user } = useChatStore(
     (state) => state
   );
-  const setChatUser = useChatStore((state) => state.setChatUser);
   const chatState = useChatStore((state) => state);
-  const chat = new ChatHab(chatState);
+  console.log("🚀 ~ App ~ chatState:", chatState);
+  // const chat = new ChatHab(chatState);
+  // console.log("🚀 ~ App ~ connection:", connection?.invoke);
 
-  useEffect(() => {
-    if (user && chatRoom) {
-      const { name, uid } = user;
-      setChatUser({ name, uid });
-      chat.invokeConnectToChat({ chatRoom, user: name });
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (user && !connection?.invoke && chatRoom) {
+  //     const rec = async () => {
+  //       const connection = await chat.invokeConnectToChat({ chatRoom, user });
+  //       if (connection.connection) {
+  //         chatState.setConnection(connection.connection);
+  //         await sleep();
+  //         chatState.setChatRoom(connection.chatRoom);
+  //       }
+  //     };
+
+  //     rec();
+  //   }
+
+  //   console.log("ref");
+  // }, []);
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <section className="flex w-full h-screen justify-center items-center">

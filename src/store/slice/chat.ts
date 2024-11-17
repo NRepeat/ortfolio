@@ -8,7 +8,7 @@ export type MessageType = {
   value: string;
   time: string;
 };
-type UserType = {
+export type UserType = {
   uid: string;
   name: string;
 };
@@ -18,6 +18,7 @@ export type State = {
   chatRoom: string | null;
   messages: MessageType[];
   user: UserType | null;
+  roomId: string | null;
 };
 
 export type Actions = {
@@ -27,6 +28,7 @@ export type Actions = {
   setChatMessages: (messages: MessageType[]) => void;
   setChatMessage: (messages: MessageType) => void;
   setChatUser: (user: UserType) => void;
+  setRoomIdUser: (roomId: string) => void;
   clearChatState: () => void;
 };
 
@@ -36,6 +38,7 @@ const initialState = {
   chatRoom: null,
   messages: [],
   user: null,
+  roomId: null,
 };
 export const useChatStore = create<State & Actions>()(
   persist(
@@ -64,11 +67,19 @@ export const useChatStore = create<State & Actions>()(
         set((state) => {
           state.user = user;
         }),
+      setRoomIdUser: (roomId) =>
+        set((state) => {
+          state.roomId = roomId;
+        }),
       clearChatState: () =>
         set((state) => {
-          (Object.keys(initialState) as (keyof State)[]).forEach((key) => {
-            state[key] = initialState[key] as never;
-          });
+          // (Object.keys(initialState) as (keyof State)[]).forEach((key) => {
+          //   state[key] = initialState[key] as never;
+          // });
+          state.connection = null;
+          state.chatRoom = null;
+          state.user = null;
+          state.messages = [];
         }),
       ...initialState,
     })),

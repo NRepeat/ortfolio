@@ -15,8 +15,8 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { useChatStore } from "@/store/slice/chat";
 import { Loader2 } from "lucide-react";
-import sleep from "@/lib/sleep";
 import ChatHab from "@/api/caht";
+import { v4 as uuidv4 } from "uuid";
 
 const ConnectForm = () => {
   const chatState = useChatStore((state) => state);
@@ -29,10 +29,12 @@ const ConnectForm = () => {
     },
   });
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const connection = await chat.invokeConnectToChat(values);
+    const uuid = uuidv4();
+    const connection = await chat.invokeConnectToChat({
+      chatRoom: values.chatRoom,
+      user: { name: values.user, uid: uuid },
+    });
     if (connection.connection) {
-      chatState.setConnection(connection.connection);
-      await sleep();
       chatState.setChatRoom(connection.chatRoom);
     }
   };

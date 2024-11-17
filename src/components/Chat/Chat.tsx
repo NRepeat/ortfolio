@@ -3,7 +3,7 @@ import { CirclePlus, CircleX } from "lucide-react";
 import Message from "./Message";
 import InputForm from "./InputForm";
 import { Avatar, AvatarImage } from "../ui/avatar";
-import { FC } from "react";
+import { FC, useCallback, useEffect } from "react";
 import { MessageType, useChatStore } from "@/store/slice/chat";
 import ChatHab from "@/api/caht";
 
@@ -18,6 +18,22 @@ const Chat: FC<ChatProps> = ({ messages }) => {
   const logout = async () => {
     await chat.disconnectFromChat();
   };
+  const recconect = useCallback(async () => {
+    if (
+      chatState.chatRoom &&
+      chatState.user &&
+      chatState.connection &&
+      !chatState.connection?.state
+    ) {
+      await chat.reconnectToChat({
+        chatRoom: chatState.chatRoom,
+        user: chatState.user,
+      });
+    }
+  }, [chatState.chatRoom, chatState.user]);
+  useEffect(() => {
+    recconect();
+  }, [recconect]);
   return (
     <Card className="w-full max-w-[400px]">
       <CardHeader className="flex flex-row items-center justify-between">

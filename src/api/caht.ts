@@ -1,9 +1,9 @@
-import { Actions, MessageType, State } from "@/store/slice/chat";
+import { Actions, MessageType, State, UserType } from "@/store/slice/chat";
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 import { toast } from "react-toastify";
 
 export type UserConnectionType = {
-  user: string;
+  user: UserType;
   chatRoom: string;
 };
 export type ChatHubMessages = {
@@ -22,10 +22,10 @@ class ChatHab {
   constructor(chatState: State & Actions) {
     this.chatState = chatState;
     this.hubConnection = new HubConnectionBuilder()
+
       .withUrl("http://localhost:5153/chat")
       .withAutomaticReconnect()
       .build();
-
     this.hubConnection.on("ReceiveAdminMessage", (data: HubMessageType) => {
       const { guid, userName, messageValue, time } = data;
       const dateTime = new Date(time);
@@ -34,12 +34,33 @@ class ChatHab {
       if (!this.chatState.user) {
         this.chatState.setChatUser({ name: userName, uid: guid });
       }
+      const messageData = JSON.parse(messageValue);
+      console.log(
+        "🚀 ~ ChatHab ~ this.hubConnection.on ~ messageData:",
+        messageData
+      );
+      this.chatState.setRoomIdUser(messageData.roomId);
       toast(
         `User ${userName} connected to ${messageValue} chat. \n${date}/${timeOnly}`
       );
     });
+    this.hubConnection.on(
+      "ReceiveDisconnectMessage",
+      (data: HubMessageType) => {
+        const messageData = JSON.parse(data.messageValue);
+        console.log("🚀 ~ ChatHab ~ constructor ~ data:", data);
+        // const { guid, userName, messageValue, time } = data;
+        if (chatState.roomId === messageData.roomId) {
+          chatState.clearChatState();
+        }
+        toast(`User  disconnected from  chat ${data.messageValue}`);
+      }
+    );
+    console.log(
+      "🚀 ~ ChatHab ~ constructor ~ this.hubConnection.state:",
+      this.hubConnection.state
+    );
     this.hubConnection.on("ReceiveClientMessage", (data: HubMessageType) => {
-      console.log("🚀 ~ ChatHab ~ this.hubConnection.on ~ dat:", data);
       const { guid, userName, messageValue, time } = data;
       const dateTime = new Date(time);
       const date = dateTime.toLocaleDateString();
@@ -49,23 +70,36 @@ class ChatHab {
         uid: guid,
         value: messageValue,
       };
-      console.log(
-        "🚀 ~ ChatHab ~ this.hubConnection.on ~ messageObj:",
-        messageObj
-      );
       chatState.setChatMessage(messageObj);
     });
-    this.hubConnection.on("disconnect", (user, message, time) => {
-      console.log("🚀 ~ joinChat ~ ReceiveMessage:", user, message, time);
-      toast(`User ${user} disconnected from ${message} chat`);
+    this.hubConnection.onclose((error) => {
+      console.log("🚀 ~ joinChat ~ ReceiveMessage:", error);
+      chatState.clearChatState();
+      toast(`User  disconnected from  chat`);
     });
+  }
+  public async reconnectToChat({ chatRoom, user }: UserConnectionType) {
+    try {
+      await this.hubConnection.start();
+      await this.hubConnection.invoke("JoinChat", {
+        chatRoom,
+        user: user.name,
+        chatId: user.uid,
+      });
+      this.chatState.setConnection(this.hubConnection);
+    } catch (error) {}
   }
   public async invokeConnectToChat({ chatRoom, user }: UserConnectionType) {
     try {
-      this.chatState.setLoading(true);
       await this.hubConnection.start();
-      await this.hubConnection.invoke("JoinChat", { chatRoom, user });
-      this.chatState.setLoading(false);
+
+      await this.hubConnection.invoke("JoinChat", {
+        chatRoom,
+        user: user.name,
+        chatId: user.uid,
+      });
+      this.chatState.setConnection(this.hubConnection);
+
       return {
         connection: this.hubConnection,
         lading: false,
@@ -78,29 +112,14 @@ class ChatHab {
       return { error: true, loading: false, message: error };
     }
   }
-  // public async reconnectToChat() {
-  //   try {
-  //     if()
-  //   } catch (error) {}
-  // }
   public async sendMessageToChat({ message }: { message: string }) {
     try {
-      this.chatState.setLoading(true);
-      if (this.chatState.connection) {
-        console.log(
-          "🚀 ~ ChatHab ~ sendMessageToChat ~ this.chatState.connection:",
-          this.chatState.connection.connectionId
-        );
-        await this.chatState.connection.invoke("SendMessage", message);
-        this.chatState.setLoading(false);
-        return {
-          connection: this.hubConnection,
-          lading: false,
-          error: false,
-        };
-      } else {
-        throw new Error("Connection not found");
-      }
+      await this.chatState.connection?.invoke("SendMessage", message);
+      return {
+        connection: this.hubConnection,
+        lading: false,
+        error: false,
+      };
     } catch (error) {
       console.log("🚀 ~ joinChat ~ error:", error);
       this.chatState.setLoading(false);
@@ -108,18 +127,14 @@ class ChatHab {
     }
   }
   public async disconnectFromChat() {
-    this.chatState.setLoading(true);
-    if (this.chatState.connection) {
-      await this.chatState.connection.stop();
-      this.chatState.clearChatState();
-      return {
-        connection: this.hubConnection,
-        lading: false,
-        error: false,
-      };
-    } else {
-      throw new Error("Connection not found");
-    }
+    await this.hubConnection.stop();
+    await this.chatState.connection?.stop();
+    // this.chatState.clearChatState();
+    return {
+      connection: this.hubConnection,
+      lading: false,
+      error: false,
+    };
   }
 }
 export default ChatHab;
