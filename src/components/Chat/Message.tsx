@@ -1,6 +1,17 @@
-const Message = ({ message, user }: { user: string; message: string }) => {
+const Message = ({
+  message,
+  time,
+  user,
+}: {
+  user: string;
+  time: string;
+  message: string;
+}) => {
   return (
-    <span className="rounded-md px-2 py-1 w-[250px] text-white">{message}</span>
+    <span className="rounded-md px-2 py-1 w-[250px] border-2 bg-muted-foreground/25">
+      {message}
+      {time}
+    </span>
   );
 };
 
